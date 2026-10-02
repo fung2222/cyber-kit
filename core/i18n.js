@@ -34,9 +34,16 @@ export function detectLang() {
 /** register strings: { key: ['zh-HK text', 'en text'] } or { key: { 'zh-HK': '…', en: '…' } }. Later calls override keys. */
 export function addStrings(table) {
   for (const [k, v] of Object.entries(table)) tables[k] = Array.isArray(v) ? v : [v['zh-HK'] ?? v.zh ?? '', v.en ?? ''];
+  scheduleApply();
   return api;
 }
 export const hasString = (key) => key in tables;
+let applyQueued = false;
+/** strings registered after page load are painted on the next microtask (v0.2.1) */
+function scheduleApply() {
+  if (applyQueued || typeof document === 'undefined' || document.readyState === 'loading') return;
+  applyQueued = true; queueMicrotask(() => { applyQueued = false; applyI18n(); });
+}
 
 /** translate key in the current (or given) language; {name} placeholders are filled from params; unknown keys return the key */
 export function t(key, params, l = lang) {
@@ -65,6 +72,8 @@ export function applyI18n(root = typeof document !== 'undefined' ? document : nu
     for (const pair of el.dataset.i18nAttr.split(',')) { const [attr, key] = pair.split(':').map((x) => x.trim()); if (attr && key) el.setAttribute(attr, t(key)); }
   });
   root.querySelectorAll('[data-lang-toggle]').forEach(paintToggle);
+  // glitch titles mirror their text in data-text for the ::before/::after layers
+  root.querySelectorAll('.glitch[data-i18n]').forEach((el) => { el.dataset.text = el.textContent; });
 }
 
 function paintToggle(el) {

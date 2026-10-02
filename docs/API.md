@@ -1,4 +1,4 @@
-# cyber-kit API (v0.2.0)
+# cyber-kit API (v0.2.1)
 
 All modules are plain ES modules. Import from `'cyber-kit'` (everything) or deep paths like `'cyber-kit/core/theme.js'` (same module instances).
 
@@ -25,10 +25,11 @@ Every CYBER game must be bilingual (Traditional Chinese, Hong Kong + English) wi
 - `t(key, params?, lang?)` — current language; `{name}` placeholders filled from `params`; unknown key ⇒ the key itself. `tBoth(key)` ⇒ `"中文 English"`.
 - `getLang()`, `isZh()`, `setLang(lang, { persist = true })`, `toggleLang()`.
 - `onLangChange(fn(lang))` ⇒ unsubscribe function. Also fires `window` event **`cyber:langchange`** (`e.detail.lang`). Use it to redraw dynamic text (HUD values, canvas textures, result screens).
-- `applyI18n(root = document)` — called automatically on load and on every change. Updates:
+- `applyI18n(root = document)` — called automatically on load, on every change and (v0.2.1) on the next microtask after any `addStrings()` once the DOM is ready, so tables registered by game modules paint without a manual call. Updates:
   - `[data-i18n="key"]` → `textContent` (optional `data-i18n-params='{"n":3}'`)
   - `[data-i18n-html="key"]` → `innerHTML` (trusted game strings only)
   - `[data-i18n-attr="title:key,aria-label:key2"]` → attributes
+  - `.glitch[data-i18n]` → also mirrors the text into `data-text` (glitch layers) (v0.2.1)
   - `<title data-i18n="key">` → `document.title`; `<html lang>` (`zh-Hant-HK` / `en`) and `<html data-lang="zh|en">` for CSS.
 - `bindToggle(button, { onToggle })` — turns a button into the language switch (shows `EN` while Chinese is active, `中` while English is active; class `.lang-btn`, `[data-lang-toggle]`).
 - Kit strings live under `kit.*` (`kit.paused`, `kit.watchAd`, `kit.noThanks`, `kit.endless`, `kit.bestEndless`, `kit.privacy`, `kit.demo`, …); `CyberUI.confirm` defaults use them. Legacy `STR`/`t2` remain exported for old code.

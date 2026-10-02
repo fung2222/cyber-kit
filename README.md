@@ -54,6 +54,9 @@ stage.loop((dt, t) => { theme.update(dt); city.update(t, dt, stage.camera); stag
 ## 授權 License
 Kit code: MIT © fung2222. Three.js: MIT (`three/LICENSE`). Orbitron font: SIL OFL 1.1 (`fonts/OFL.txt`).
 
+## v0.2.1
+- `addStrings()` auto-repaints `data-i18n` elements (no manual `i18n.apply()` needed); glitch titles keep `data-text` in sync.
+
 ## v0.2.0
 - **i18n** (`core/i18n.js`): zh-HK / English, `t(key)`, per-game string tables, live DOM updates via `data-i18n`, toggle button, choice stored in `localStorage['cyber.lang']`. See [docs/API.md](docs/API.md#corei18njs-v020--bilingual-zh-hk--en).
 - **endless helpers** (`core/endless.js`): capped difficulty curve + milestones.
