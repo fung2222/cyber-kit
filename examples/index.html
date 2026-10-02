@@ -20,16 +20,16 @@
 <canvas id="scene"></canvas>
 <div id="scanlines"></div>
 <div id="hud"><div id="fps" class="fps">-- FPS</div></div>
-<div class="pg-title"><div class="kicker">CYBER-KIT v0.1.0</div><div class="title-en" style="margin:0">PLAYGROUND</div></div>
+<div class="pg-title"><div class="kicker">CYBER-KIT v0.2.0</div><div class="title-en" style="margin:0">PLAYGROUND</div></div>
 <div class="pg">
   <button id="b-banner">Banner</button><button id="b-popup">Popup</button><button id="b-toast">Toast</button>
-  <button id="b-theme">換主題 Theme</button><button id="b-sfx">SFX</button><button id="b-music">Music</button>
-  <button id="b-reward">Rewarded</button><button id="b-break">Natural break</button><button id="btn-mute">Mute</button>
+  <button id="b-theme" data-i18n="pg.theme">Theme</button><button id="b-sfx">SFX</button><button id="b-music">Music</button>
+  <button id="b-reward">Rewarded</button><button id="b-break">Natural break</button><button id="btn-mute" data-i18n="kit.mute">Mute</button><button id="b-lang"></button>
 </div>
 <div id="loading" class="loading"><div class="ld-text">BOOTING…</div></div>
 <script type="module">
 import * as THREE from 'three';
-import { createStage, NeonCity, ThemeController, THEMES, U, Particles, Shockwaves, FxState, SynthAudio, createInput, CyberUI, createStore, createAds, flags, Platform, KIT_VERSION } from 'cyber-kit';
+import { i18n, t, themeLabel, createStage, NeonCity, ThemeController, THEMES, U, Particles, Shockwaves, FxState, SynthAudio, createInput, CyberUI, createStore, createAds, flags, Platform, KIT_VERSION } from 'cyber-kit';
 
 const stage = createStage({ canvas: document.getElementById('scene') });
 const ui = new CyberUI({ screens: [] });
@@ -63,8 +63,9 @@ function burst(p) {
 }
 ui.on('b-banner', () => { ui.banner('第 2 關', 'LEVEL UP', '霓虹九龍 · 測試橫額'); audio.levelUp(); fx.kick({ glitch: 0.6, aberr: 1.4 }); });
 ui.on('b-popup', () => ui.popup(stage.width / 2, stage.height * 0.4, '+128', 'x2'));
-ui.on('b-toast', () => ui.toast('已儲存 · SAVED'));
-ui.on('b-theme', () => { ti = (ti + 1) % THEMES.length; const th = theme.set(ti); ui.toast(th.name + ' · ' + th.en); });
+i18n.add({ 'pg.theme': ['換主題', 'Theme'], 'pg.saved': ['已儲存', 'SAVED'] }); i18n.apply(); i18n.bindToggle(document.getElementById('b-lang'), { onToggle: () => ui.toast(t('kit.language') + ': ' + i18n.lang) });
+ui.on('b-toast', () => ui.toast(t('pg.saved')));
+ui.on('b-theme', () => { ti = (ti + 1) % THEMES.length; const th = theme.set(ti); ui.toast(themeLabel(th)); });
 ui.on('b-sfx', () => { audio.init(); audio.confirm(); setTimeout(() => audio.chime(6), 200); setTimeout(() => audio.whoosh(), 450); });
 ui.on('b-music', () => { audio.init(); audio.musicPlaying ? audio.stopMusic() : audio.startMusic(); });
 ui.on('btn-mute', () => { audio.init(); ui.setMuted(audio.toggleMute()); });

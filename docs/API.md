@@ -1,4 +1,4 @@
-# cyber-kit API (v0.1.0)
+# cyber-kit API (v0.2.0)
 
 All modules are plain ES modules. Import from `'cyber-kit'` (everything) or deep paths like `'cyber-kit/core/theme.js'` (same module instances).
 
@@ -16,6 +16,38 @@ All modules are plain ES modules. Import from `'cyber-kit'` (everything) or deep
 | `seed` | int | deterministic RNG seed (game-defined) |
 | `adsim` | bool | simulate ad overlays in the browser |
 | `mute`, `reset`, `debug` | bool | start muted, clear storage, verbose logs |
+
+## core/i18n.js (v0.2.0) — bilingual zh-HK / en
+Every CYBER game must be bilingual (Traditional Chinese, Hong Kong + English) with an in-game toggle.
+- Language codes: `LANGS = ['zh-HK', 'en']`. Choice persisted in **`localStorage['cyber.lang']`** (shared by all CYBER games, not namespaced per game).
+- Default (`detectLang()`): `?lang=en|zh` URL flag (also stored) → stored value → `navigator.language` starting with `zh` ⇒ `zh-HK`, otherwise `en`.
+- `addStrings(table)` / `i18n.add(table)` — `{ key: ['中文', 'English'] }` or `{ key: { 'zh-HK': '…', en: '…' } }`. Later calls override. Empty English falls back to Chinese.
+- `t(key, params?, lang?)` — current language; `{name}` placeholders filled from `params`; unknown key ⇒ the key itself. `tBoth(key)` ⇒ `"中文 English"`.
+- `getLang()`, `isZh()`, `setLang(lang, { persist = true })`, `toggleLang()`.
+- `onLangChange(fn(lang))` ⇒ unsubscribe function. Also fires `window` event **`cyber:langchange`** (`e.detail.lang`). Use it to redraw dynamic text (HUD values, canvas textures, result screens).
+- `applyI18n(root = document)` — called automatically on load and on every change. Updates:
+  - `[data-i18n="key"]` → `textContent` (optional `data-i18n-params='{"n":3}'`)
+  - `[data-i18n-html="key"]` → `innerHTML` (trusted game strings only)
+  - `[data-i18n-attr="title:key,aria-label:key2"]` → attributes
+  - `<title data-i18n="key">` → `document.title`; `<html lang>` (`zh-Hant-HK` / `en`) and `<html data-lang="zh|en">` for CSS.
+- `bindToggle(button, { onToggle })` — turns a button into the language switch (shows `EN` while Chinese is active, `中` while English is active; class `.lang-btn`, `[data-lang-toggle]`).
+- Kit strings live under `kit.*` (`kit.paused`, `kit.watchAd`, `kit.noThanks`, `kit.endless`, `kit.bestEndless`, `kit.privacy`, `kit.demo`, …); `CyberUI.confirm` defaults use them. Legacy `STR`/`t2` remain exported for old code.
+- `i18n` object bundles everything: `i18n.t / add / lang / set / toggle / onChange / apply / bindToggle`.
+- `themeLabel(theme)` (core/theme.js) returns the district name in the current language.
+- CSS (hud.css): `.lang-btn`, `.lang-corner` (fixed top-right helper), and `html[data-lang="en"]` typography tweaks for `.title/.title2/.banner-main/.neon-btn`.
+
+```js
+import { i18n, t } from 'cyber-kit';
+i18n.add({ 'g.title': ['數據熔合', 'DATA FUSE'], 'g.level': ['第 {n} 關', 'LEVEL {n}'] });
+i18n.bindToggle(document.getElementById('btn-lang'));
+i18n.onChange(() => renderHud());          // dynamic strings
+ui.banner(t('g.level', { n: 12 }));
+```
+
+## core/endless.js (v0.2.0) — endless mode helpers
+Every CYBER game must have an endless mode (no final "beat the game" state).
+- `endlessCurve(n, { start = 0, cap = 1, tau = 12 })` — `start + (cap − start)·(1 − e^(−n/τ))`: rises smoothly and saturates at `cap` so difficulty stays playable forever.
+- `milestoneOf(n, every = 10)` — milestone index when `n` is a multiple of `every` (else 0) — use for theme shifts / rewards / natural ad breaks.
 
 ## core/storage.js
 `createStore(gameId)` → `{ get(k, def), set(k, v), getNum, setNum, getBool, setBool, getJSON, setJSON, remove(k), best, submitBest(score) → bool, clear() }`. Keys are `cyber.<gameId>.<key>`. Falls back to memory if localStorage is blocked.

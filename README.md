@@ -9,7 +9,7 @@
 ## 用法 Usage
 每隻遊戲將某個 **tag 版本** 複製入 `vendor/cyber-kit/`（唔用 CDN，方便離線同包 App）：
 ```bash
-git clone --depth 1 --branch v0.1.0 https://github.com/fung2222/cyber-kit /tmp/ck
+git clone --depth 1 --branch v0.2.0 https://github.com/fung2222/cyber-kit /tmp/ck
 mkdir -p vendor/cyber-kit && (cd /tmp/ck && tar cf - --exclude=.git --exclude=examples --exclude=docs --exclude=README.md .) | (cd vendor/cyber-kit && tar xf -)
 ```
 ```html
@@ -49,7 +49,12 @@ stage.loop((dt, t) => { theme.update(dt); city.update(t, dt, stage.camera); stag
 完整 API：[docs/API.md](docs/API.md)
 
 ## 版本 Versions
-- **v0.1.0** (2026-10-02) — 首個版本，用於 DATA FUSE。
+- **v0.2.0** (2026-10-02) — 首個版本，用於 DATA FUSE。
 
 ## 授權 License
 Kit code: MIT © fung2222. Three.js: MIT (`three/LICENSE`). Orbitron font: SIL OFL 1.1 (`fonts/OFL.txt`).
+
+## v0.2.0
+- **i18n** (`core/i18n.js`): zh-HK / English, `t(key)`, per-game string tables, live DOM updates via `data-i18n`, toggle button, choice stored in `localStorage['cyber.lang']`. See [docs/API.md](docs/API.md#corei18njs-v020--bilingual-zh-hk--en).
+- **endless helpers** (`core/endless.js`): capped difficulty curve + milestones.
+- Kit UI/ads-sim/WebGL-error strings are now translated.
