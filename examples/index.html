@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-HK">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>cyber-kit playground</title>
+<link rel="stylesheet" href="../ui/hud.css">
+<script type="importmap">
+{ "imports": { "three": "../three/three.module.min.js", "three/addons/": "../three/addons/", "cyber-kit": "../kit.js" } }
+</script>
+<style>
+  .pg { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 8; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; width: min(720px, 96vw); }
+  .pg button { pointer-events: auto; font-family: var(--font-zh); font-size: 13px; letter-spacing: 1px; color: #fff; padding: 8px 12px; cursor: pointer; background: rgba(10,4,30,.6); border: 1px solid var(--c1); box-shadow: 0 0 10px color-mix(in srgb, var(--c1) 40%, transparent); }
+  .pg-title { position: fixed; top: max(16px, env(safe-area-inset-top)); left: 0; right: 0; text-align: center; z-index: 8; pointer-events: none; }
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+<div id="scanlines"></div>
+<div id="hud"><div id="fps" class="fps">-- FPS</div></div>
+<div class="pg-title"><div class="kicker">CYBER-KIT v0.1.0</div><div class="title-en" style="margin:0">PLAYGROUND</div></div>
+<div class="pg">
+  <button id="b-banner">Banner</button><button id="b-popup">Popup</button><button id="b-toast">Toast</button>
+  <button id="b-theme">換主題 Theme</button><button id="b-sfx">SFX</button><button id="b-music">Music</button>
+  <button id="b-reward">Rewarded</button><button id="b-break">Natural break</button><button id="btn-mute">Mute</button>
+</div>
+<div id="loading" class="loading"><div class="ld-text">BOOTING…</div></div>
+<script type="module">
+import * as THREE from 'three';
+import { createStage, NeonCity, ThemeController, THEMES, U, Particles, Shockwaves, FxState, SynthAudio, createInput, CyberUI, createStore, createAds, flags, Platform, KIT_VERSION } from 'cyber-kit';
+
+const stage = createStage({ canvas: document.getElementById('scene') });
+const ui = new CyberUI({ screens: [] });
+const store = createStore('kit-playground');
+const city = new NeonCity(stage, { billboard: { zh: '賽博套件', en: 'C Y B E R  K I T' }, floorHalf: 6, arena: true });
+const theme = new ThemeController(); let ti = 0; theme.set(0, true);
+const particles = new Particles(stage.scene); const waves = new Shockwaves(stage.scene); const fx = new FxState();
+stage.onResize((w, h, pr) => particles.resize(h, pr));
+const audio = new SynthAudio({ store, music: 'chill' });
+ui.setMuted(audio.muted);
+const ads = createAds({ gameId: 'kit-playground', graceSec: 0, breaksBetweenInterstitials: 1, interstitialCooldownSec: 5, onAdOpen: (on) => audio.duckAll(on) });
+ads.init();
+
+const cubes = [];
+const mat = new THREE.MeshStandardMaterial({ color: 0x0b0b16, metalness: 0.9, roughness: 0.25, emissive: 0x000000 });
+for (let i = 0; i < 5; i++) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2), mat.clone());
+  m.position.set((i - 2) * 2.2, 1.4, 0); stage.scene.add(m); cubes.push(m);
+}
+const cam = stage.camera;
+createInput({
+  anyGesture: () => audio.init(),
+  dir: (d) => { ui.popup(stage.width / 2, stage.height / 2, d.toUpperCase()); audio.tick(); },
+  tap: (p) => { const c = cubes[Math.floor(Math.random() * cubes.length)]; burst(c.position); },
+  action: (a) => { if (a === 'mute') ui.setMuted(audio.toggleMute()); if (a === 'fps') document.getElementById('fps').classList.toggle('hidden'); },
+});
+function burst(p) {
+  particles.burst(p, U.uC1.value, 80, { speed: 7, up: 4, color2: U.uC2.value });
+  waves.spawn(new THREE.Vector3(p.x, 0, p.z), U.uC2.value, { r1: 4 });
+  city.pulse(p.x, p.z, 1.5); fx.kick({ trauma: 0.3, aberr: 0.8 }); audio.chime(Math.floor(Math.random() * 10));
+}
+ui.on('b-banner', () => { ui.banner('第 2 關', 'LEVEL UP', '霓虹九龍 · 測試橫額'); audio.levelUp(); fx.kick({ glitch: 0.6, aberr: 1.4 }); });
+ui.on('b-popup', () => ui.popup(stage.width / 2, stage.height * 0.4, '+128', 'x2'));
+ui.on('b-toast', () => ui.toast('已儲存 · SAVED'));
+ui.on('b-theme', () => { ti = (ti + 1) % THEMES.length; const th = theme.set(ti); ui.toast(th.name + ' · ' + th.en); });
+ui.on('b-sfx', () => { audio.init(); audio.confirm(); setTimeout(() => audio.chime(6), 200); setTimeout(() => audio.whoosh(), 450); });
+ui.on('b-music', () => { audio.init(); audio.musicPlaying ? audio.stopMusic() : audio.startMusic(); });
+ui.on('btn-mute', () => { audio.init(); ui.setMuted(audio.toggleMute()); });
+ui.on('b-reward', async () => {
+  const ok = await ui.confirm({ kicker: 'REWARD', title: '睇廣告換復原？', text: '網頁版冇廣告，會直接俾你。' });
+  if (!ok) return;
+  const r = await ads.rewarded('test'); ui.toast(r.rewarded ? '獎勵已發放 ✓ (' + r.reason + ')' : '冇獎勵 (' + r.reason + ')');
+});
+ui.on('b-break', async () => { const shown = await ads.naturalBreak('test'); ui.toast(shown ? 'Interstitial shown' : 'Capped / web no-op'); });
+Platform.onBack(() => ui.closeModal());
+
+const look = new THREE.Vector3(0, 1, 0);
+stage.loop((dt, t) => {
+  theme.update(dt); fx.update(dt);
+  cubes.forEach((c, i) => { c.rotation.y = t * 0.6 + i; c.rotation.x = t * 0.4; c.position.y = 1.4 + Math.sin(t * 2 + i) * 0.25; c.material.emissive.copy(i % 2 ? U.uC1.value : U.uC2.value).multiplyScalar(0.6); });
+  const a = t * 0.08; const R = stage.width < stage.height ? 24 : 17;
+  cam.position.set(Math.sin(a) * R, 8, Math.cos(a) * R); cam.lookAt(look); fx.shake(cam, t);
+  particles.update(dt); waves.update(dt); ui.tick(dt);
+  city.update(t, dt, cam); fx.applyPost(stage, t);
+  stage.render(dt);
+}, { fpsEl: document.getElementById('fps') });
+ui.loaded();
+window.__kit = { stage, ads, audio, version: KIT_VERSION };
+</script>
+</body>
+</html>
