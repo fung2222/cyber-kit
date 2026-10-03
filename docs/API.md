@@ -1,4 +1,4 @@
-# cyber-kit API (v0.2.1)
+# cyber-kit API (v0.3.0)
 
 All modules are plain ES modules. Import from `'cyber-kit'` (everything) or deep paths like `'cyber-kit/core/theme.js'` (same module instances).
 
@@ -13,6 +13,7 @@ All modules are plain ES modules. Import from `'cyber-kit'` (everything) or deep
 | `noauto` | bool | disable auto-quality |
 | `quality` | low/med/high/auto | pixel-ratio cap (low also drops floor reflection) |
 | `bloom`, `exp`, `tm`, `dtcap` | number/string | bloom strength, exposure, tone mapping, dt cap |
+| `glow` | low/high | (v0.3.0) glow level for this visit (default: shared `cyber.glow` pref, else `low`) |
 | `seed` | int | deterministic RNG seed (game-defined) |
 | `adsim` | bool | simulate ad overlays in the browser |
 | `mute`, `reset`, `debug` | bool | start muted, clear storage, verbose logs |
@@ -54,7 +55,7 @@ Every CYBER game must have an endless mode (no final "beat the game" state).
 `createStore(gameId)` → `{ get(k, def), set(k, v), getNum, setNum, getBool, setBool, getJSON, setJSON, remove(k), best, submitBest(score) → bool, clear() }`. Keys are `cyber.<gameId>.<key>`. Falls back to memory if localStorage is blocked.
 
 ## core/theme.js
-- `U` — shared uniforms: `uTime, uC1, uC2, uC3, uFogColor, uFogDensity, uHorizon, uZenith, uGrid…` (used by backdrop + game shaders).
+- `U` — shared uniforms: `uTime, uC1, uC2, uC3, uFogColor, uFogDensity, uHorizon, uZenith, uGrid…` (used by backdrop + game shaders). v0.3.0: default `uFogDensity` 0.012 (was 0.017).
 - `THEMES` — 6 HK districts `{ name, en, c1, c2, c3, fog, horizon, zenith, accent, grid }`.
 - `themeFor(level)` cycles THEMES.
 - `new ThemeController({ speed = 2.2, css = true })` → `.set(themeOrLevel, instant)`, `.update(dt)` (lerps uniforms), `.accent` (Color), `.current`. Sets CSS vars `--c1 --c2 --c3`.
@@ -63,6 +64,10 @@ Every CYBER game must have an endless mode (no final "beat the game" state).
 `createStage({ canvas, bloom = .85, bloomRadius = .45, bloomThreshold = .82, fov = 50, near, far, toneMapping = 'neutral', exposure = 1, maxPixelRatio = 2, onFatal })` →
 `{ renderer, scene, camera, composer, bloomPass, cyberPass, bloomBase, flags, pixelRatio, width, height, fps, onResize(fn(w,h,pr)), resize(), setPixelRatio(pr), toScreen(vec3) → {x,y} CSS px, render(dt), loop(fn(dt, t, rawDt), { isActive, fpsEl }) }`.
 Auto-quality lowers the pixel ratio when FPS stays low while `isActive()` is true.
+
+**Glow (v0.3.0).** The `bloom / bloomRadius / bloomThreshold` you pass are the **HIGH** look. The stage starts at `o.glow || getGlowPref()` (`?glow=` flag → `localStorage['cyber.glow']`, shared by all CYBER games → `'low'`). `GLOW_LEVELS.low` = strength ×0.45, radius ×0.55, threshold +0.12 (max 0.98), aberration 0.0006, grain 0.01; `high` = your values, aberration 0.0018, grain 0.018. Override per game with `glowLevels: { low: { strength, radius, threshold, thresholdMax, aberration, grain } }` (e.g. cyber-board pushes the LOW threshold above its piece / board brightness so only effects bloom).
+`stage.glow`, `stage.setGlow('low'|'high', { persist })`, `stage.toggleGlow()` (persists), `stage.onGlow(fn(level))`, `stage.bloomBase` / `stage.aberrBase` (current base values, used by `FxState.applyPost`). Exports `GLOW_LEVELS, getGlowPref, setGlowPref`.
+Keep gameplay materials below the LOW threshold (HDR colour ≲ 1) so they render sharp; reserve HDR ×2…×5 colours for effects.
 
 ## core/post.js
 `CyberShader` — ShaderPass material with `uTime, uAberration, uGlitch, uVignette, uGrain, uFlash`.
@@ -78,14 +83,21 @@ Auto-quality lowers the pixel ratio when FPS stays low while `isActive()` is tru
 
 ## audio/synth.js
 `new SynthAudio({ store, music: 'drive'|'chill'|preset, volume })` — call `.init()` from a user gesture (it refuses to create an AudioContext before the first gesture).
+`new SynthAudio({ store, music, musicTrimDb = 0, sfxTrimDb = 0, volume })`.
 `.setMuted(b)`, `.toggleMute()` (persisted as `muted`), `.duckAll(on)` (ads), `.osc({...})`, `.noiseHit({...})`, SFX `click confirm back denied tick whoosh levelUp fail chime(n)`, music `startMusic stopMusic duckMusic unduckMusic setLevel(l)`. `mtof(midi)`, `MUSIC` presets. Suspends while the page is hidden.
+
+**Loudness (v0.3.0).** Shared targets `LOUDNESS = { musicLufs: −20, sfxOverMusicDb: 0, volumeRangeDb: 40 }`. Chain: `sfx` bus (0.9 × `KIT_SFX_GAIN_DB` (+14 dB) × `sfxTrimDb`) and `music` bus (`preset.gain` × `preset.trimDb` × `musicTrimDb`) → `master` (fixed sum) → glue compressor (−16 dB, 2.5:1) → limiter (−4 dB, 20:1, 1 ms) → soft clip → `out` (volume × mute) → speakers. Volume and mute act after the dynamics so every slider position sounds the same in every game.
+- Presets are calibrated (`drive.trimDb` 3.9, `chill.trimDb` 10.2) to ≈ −20 LUFS. A custom preset object needs its own `trimDb` (or pass `musicTrimDb`).
+- Calibrate SFX per game with `sfxTrimDb` so the median SFX event peaks (400 ms momentary loudness) near the music level (ratio 0 ± 2 dB).
+- Measure: serve the workspace (`python3 -m http.server`) and run `python3 tests/loudness.py BASE_URL GAME_DIR:AudioClass[:music|snake] … ` (headless Chrome + OfflineAudioContext, BS.1770 K-weighting) — it prints integrated LUFS / RMS / peak for the music, the median and max SFX momentary loudness and the SFX/BGM ratio.
+- Volume: `.setVolume(v, 'master'|'music'|'sfx')`, `.setMusicVolume(v)`, `.setSfxVolume(v)`, `.getVolumes()`, `.volume` (master slider). Sliders are 0..1 positions mapped by `volumeToGain(v)` (0 = silent, else dB-linear over 40 dB: 1 → 0 dB, 0.5 → −20 dB). Stored in `localStorage['cyber.audio']` (shared by all CYBER games). Exports `dbToGain, volumeToGain, loadVolumes, LOUDNESS, KIT_SFX_GAIN_DB`.
 
 ## input/input.js
 `createInput({ dir(d, info), tap(p), holdStart(p), holdEnd(p), action(name), anyGesture() }, { target, swipe: 'once'|'chain', threshold = 24, holdMs = 380, tapMaxMove = 14, keys, actions, ignore })` → `{ setEnabled(b), dispose() }`.
 Default actions: Enter/Space `primary`, P/Esc `pause`, M `mute`, Z/U/Backspace `undo`, R `restart`, C `camera`, F `fps`. Pointer events on buttons/links/`[data-no-input]` are ignored.
 
 ## ui/ui.js + ui/hud.css
-`new CyberUI({ screens: ['start','pause','over'] })` (elements `#screen-<name>`) → `.show(name|null)`, `.hud(on)`, `.loaded()`, `.fatal(msg)`, `.on(id, fn)`, `.setText(id, v)`, `.bump(el)`, `.setMuted(b)`, `.popup(x, y, text, sub, cls)`, `.banner(main, sub, note)` + `.tick(dt)`, `.flash(color, ms)`, `.toast(text, ms)`, `.confirm({ kicker, title, text, ok, okSmall, cancel, cancelSmall }) → Promise<bool>`, `.modalOpen`, `.closeModal()`.
+`new CyberUI({ screens: ['start','pause','over'] })` (elements `#screen-<name>`) → `.show(name|null)`, `.hud(on)`, `.loaded()`, `.fatal(msg)`, `.on(id, fn)`, `.setText(id, v)`, `.bump(el)`, `.setMuted(b)`, `.popup(x, y, text, sub, cls)`, `.glowToggle(stage, { after = 'btn-resume', id = 'btn-glow', onChange })` (v0.3.0: inserts a `GLOW: LOW/HIGH` ghost button, strings `kit.glow*`), `.banner(main, sub, note)` + `.tick(dt)`, `.flash(color, ms)`, `.toast(text, ms)`, `.confirm({ kicker, title, text, ok, okSmall, cancel, cancelSmall }) → Promise<bool>`, `.modalOpen`, `.closeModal()`.
 CSS building blocks: `.hud-panel .stat .label .value .level-progress .lp-* .icon-btn .neon-btn(.ghost) .screen(.hero) .panel(.small) .title .title2 .glitch .results .ck-toast .ck-modal`.
 
 ## ui/strings.js

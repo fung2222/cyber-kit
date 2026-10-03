@@ -9,8 +9,8 @@
 ## 用法 Usage
 每隻遊戲將某個 **tag 版本** 複製入 `vendor/cyber-kit/`（唔用 CDN，方便離線同包 App）：
 ```bash
-git clone --depth 1 --branch v0.2.0 https://github.com/fung2222/cyber-kit /tmp/ck
-mkdir -p vendor/cyber-kit && (cd /tmp/ck && tar cf - --exclude=.git --exclude=examples --exclude=docs --exclude=README.md .) | (cd vendor/cyber-kit && tar xf -)
+git clone --depth 1 --branch v0.3.0 https://github.com/fung2222/cyber-kit /tmp/ck
+mkdir -p vendor/cyber-kit && (cd /tmp/ck && tar cf - --exclude=.git --exclude=examples --exclude=docs --exclude=tests --exclude=README.md --exclude=.gitignore .) | (cd vendor/cyber-kit && tar xf -)
 ```
 ```html
 <link rel="stylesheet" href="./vendor/cyber-kit/ui/hud.css">
@@ -49,10 +49,17 @@ stage.loop((dt, t) => { theme.update(dt); city.update(t, dt, stage.camera); stag
 完整 API：[docs/API.md](docs/API.md)
 
 ## 版本 Versions
+- **v0.3.0** (2026-10-03) — 統一音量（所有遊戲 BGM ≈ −20 LUFS）、限幅器、音量曲線；光暈 LOW/HIGH（預設 LOW，畫面更清晰）。
+- **v0.2.1** (2026-10-02) — i18n 自動重繪。
 - **v0.2.0** (2026-10-02) — 首個版本，用於 DATA FUSE。
 
 ## 授權 License
 Kit code: MIT © fung2222. Three.js: MIT (`three/LICENSE`). Orbitron font: SIL OFL 1.1 (`fonts/OFL.txt`).
+
+## v0.3.0
+- **Consistent loudness** (`audio/synth.js`): every game's music is calibrated to ≈ −20 LUFS (BS.1770 integrated) and the median SFX event to about the same momentary level, so switching games no longer jumps in volume. New chain: buses → glue compressor → limiter → soft clip → `out` (volume / mute). Presets carry `trimDb`; games tune with `musicTrimDb` / `sfxTrimDb`. Perceptual volume API `setVolume(v, 'master'|'music'|'sfx')` (0..1 → 40 dB dB-linear curve, shared `localStorage['cyber.audio']`). Measure with `tests/loudness.html` + `tests/loudness.py`.
+- **Glow LOW / HIGH** (`core/renderer.js`): `createStage` treats the game's bloom values as the HIGH look and defaults to LOW (≈45 % strength, smaller radius, higher threshold, less chromatic aberration / grain) so gameplay objects stay crisp. `?glow=low|high`, shared `localStorage['cyber.glow']`, `stage.setGlow()`, `stage.toggleGlow()`, `stage.onGlow()`, `ui.glowToggle(stage)` (pause-screen button).
+- Lighter default fog (`U.uFogDensity` 0.017 → 0.012); CyberShader default aberration 0.0025 → 0.0012, grain 0.018 → 0.012.
 
 ## v0.2.1
 - `addStrings()` auto-repaints `data-i18n` elements (no manual `i18n.apply()` needed); glitch titles keep `data-text` in sync.

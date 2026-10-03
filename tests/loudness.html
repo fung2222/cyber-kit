@@ -1,0 +1,68 @@
+<!doctype html><meta charset="utf-8"><title>cyber-kit loudness meter</title>
+<!-- Used by tests/loudness.py: ?dir=<game dir under the server root>[&kit=<kit url path>]. Renders music + SFX offline (48 kHz) and measures BS.1770 loudness. -->
+<script>
+{ const q = new URLSearchParams(location.search), d = q.get('dir') || 'cyber-tower', K = q.get('kit') || `/${d}/vendor/cyber-kit`;
+  const im = document.createElement('script'); im.type = 'importmap';
+  im.textContent = JSON.stringify({ imports: { 'three': `${K}/three/three.module.min.js`, 'three/addons/': `${K}/three/addons/`, 'cyber-kit': `${K}/kit.js`, 'cyber-kit/': `${K}/` } });
+  document.currentScript.after(im); }
+Object.defineProperty(navigator, 'userActivation', { value: { hasBeenActive: true, isActive: true } });
+window.__SR = 48000; window.__DUR = 30;
+window.AudioContext = class extends OfflineAudioContext { constructor() { super(2, Math.ceil(window.__SR * window.__DUR), window.__SR); } };
+window.webkitAudioContext = window.AudioContext;
+</script>
+<script type="module">
+const store = { getBool: (k, d) => d, setBool() {}, getNum: (k, d) => d, setNum() {}, get: (k, d) => d, set() {} };
+// ---- BS.1770 K-weighting @48k
+function kw(x) {
+  const y = new Float32Array(x.length);
+  const st = (b, a, inp, out) => { let x1 = 0, x2 = 0, y1 = 0, y2 = 0; for (let i = 0; i < inp.length; i++) { const v = b[0] * inp[i] + b[1] * x1 + b[2] * x2 - a[1] * y1 - a[2] * y2; x2 = x1; x1 = inp[i]; y2 = y1; y1 = v; out[i] = v; } };
+  const tmp = new Float32Array(x.length);
+  st([1.53512485958697, -2.69169618940638, 1.19839281085285], [1, -1.69065929318241, 0.73248077421585], x, tmp);
+  st([1, -2, 1], [1, -1.99004745483398, 0.99007225036621], tmp, y); return y;
+}
+function blocks(chs, sr, from, to, win = 0.4, hop = 0.1) {
+  const k = chs.map(kw), out = [];
+  for (let s = from; s + win <= to + 1e-9; s += hop) {
+    const i0 = Math.round(s * sr), i1 = Math.round((s + win) * sr); let z = 0;
+    for (const c of k) { let a = 0; for (let i = i0; i < i1; i++) a += c[i] * c[i]; z += a / (i1 - i0); }
+    out.push({ t: s, z, l: -0.691 + 10 * Math.log10(z + 1e-20) });
+  }
+  return out;
+}
+function integrated(bl) {
+  let g = bl.filter(b => b.l > -70); if (!g.length) return -Infinity;
+  const m = g.reduce((a, b) => a + b.z, 0) / g.length; const rel = -0.691 + 10 * Math.log10(m) - 10;
+  g = g.filter(b => b.l > rel); return -0.691 + 10 * Math.log10(g.reduce((a, b) => a + b.z, 0) / g.length);
+}
+function stats(buf, from, to) {
+  const chs = [buf.getChannelData(0), buf.getChannelData(1)], sr = buf.sampleRate;
+  let pk = 0, ss = 0, n = 0; const i0 = Math.round(from * sr), i1 = Math.round(to * sr);
+  for (const c of chs) for (let i = i0; i < i1; i++) { const v = Math.abs(c[i]); if (v > pk) pk = v; ss += c[i] * c[i]; n++; }
+  return { lufs: integrated(blocks(chs, sr, from, to)), rmsDb: 10 * Math.log10(ss / n), peakDb: 20 * Math.log10(pk + 1e-12) };
+}
+const r1 = v => Math.round(v * 10) / 10;
+window.measure = async ({ mod, cls, snake = false, level = 2, sfxSkip = [], sfxArgs = {}, setup = null }) => {
+  const M = await import(mod); const C = M[cls];
+  const make = () => { const a = snake ? new C() : new C(store); a.muted = false; if (setup) (new Function('a', setup))(a); a.init(); a.setLevel && a.setLevel(level); return a; };
+  // ---- music
+  window.__DUR = 30; const a = make(); const ctx = a.ctx;
+  a.startMusic(); clearInterval(a.timer);
+  const P = a.preset || { bpm: 100, bpmPerLevel: 4, bpmMax: 132 };
+  const bpm = Math.min(P.bpm + (level - 1) * P.bpmPerLevel, P.bpmMax), s16 = 60 / bpm / 4;
+  a.delay.delayTime.value = s16 * 3;
+  for (let step = 0, t = 0.08; t < window.__DUR - 0.3; step++, t += s16) a.playStep(step % 64, t, s16);
+  const mb = await ctx.startRendering(); const music = stats(mb, 4, 29.5);
+  // ---- sfx: each game-specific method at 1.6 s spacing via offline suspend
+  const names = Object.getOwnPropertyNames(C.prototype).filter(n => n !== 'constructor' && typeof C.prototype[n] === 'function' && !/music|Music|init|schedule|playStep|setLevel|Mute|osc|noiseHit|engine/.test(n) && !sfxSkip.includes(n));
+  window.__DUR = names.length * 1.6 + 2; const b = make(); const c2 = b.ctx; const ok = [];
+  names.forEach((n, i) => c2.suspend(0.2 + i * 1.6).then(() => { try { b[n](...(sfxArgs[n] || [])); ok.push(n); } catch (e) { } c2.resume(); }));
+  const sb = await c2.startRendering();
+  const chs = [sb.getChannelData(0), sb.getChannelData(1)];
+  const bl = blocks(chs, sb.sampleRate, 0, sb.duration - 0.5);
+  const ev = names.map((n, i) => { const t0 = 0.2 + i * 1.6; const m = Math.max(...bl.filter(x => x.t >= t0 - 0.05 && x.t < t0 + 1.2).map(x => x.l)); return [n, r1(m)]; }).filter(e => isFinite(e[1]) && e[1] > -60);
+  const vals = ev.map(e => e[1]).sort((x, y) => x - y); const med = vals[Math.floor(vals.length / 2)];
+  let pk = 0; for (const ch of chs) for (const v of ch) pk = Math.max(pk, Math.abs(v));
+  return { bpm, music: { lufs: r1(music.lufs), rms: r1(music.rmsDb), peak: r1(music.peakDb) }, sfxMedianMomentary: r1(med), sfxMax: r1(vals[vals.length - 1]), sfxPeak: r1(20 * Math.log10(pk)), ratio: r1(med - music.lufs), events: ev };
+};
+window.__ready = true;
+</script>
