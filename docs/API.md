@@ -1,4 +1,4 @@
-# cyber-kit API (v0.3.0)
+# cyber-kit API (v0.3.1)
 
 All modules are plain ES modules. Import from `'cyber-kit'` (everything) or deep paths like `'cyber-kit/core/theme.js'` (same module instances).
 
@@ -102,6 +102,11 @@ CSS building blocks: `.hud-panel .stat .label .value .level-progress .lp-* .icon
 
 ## ui/strings.js
 `STR` zh-HK/EN pairs (`[zh, en]`), `t2(key)` → "zh EN".
+
+## platform/hub.js
+`readHub(search?)` → `{ fromHub, tier, ads, trial, trialLeft, ret, entitlement }` from `?hub=1&tier&ads&trial&trialLeft&ret=` (+ `localStorage cyber.entitlement` fallback).
+`returnToHub({ gameId, openStore=false })` — prefer `history.back()` when `hub=1`, else same-origin `ret=`, else `../cyber-arcade/`. Pass `openStore: true` only for the trial unlock path (writes `cyber.arcade.openStore`).
+`shouldShowArcadeMenu(hub?)` — true when `hub=1` or `ret` is present. i18n: `kit.arcadeMenu` / `kit.arcadeMenuS`.
 
 ## platform/platform.js
 `Platform.isNative`, `.name`, `.plugin(name)`, `.onBack(fn → true if handled)` (newest first; unhandled → minimise app), `.onPause(fn)`, `.onResume(fn)`, `.haptic('light'|'medium'|'heavy'|'success'|'warning'|'error')`, `.setHaptics(b)`, `.exit()`, `.openUrl(url)`.
