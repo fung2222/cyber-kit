@@ -1,4 +1,4 @@
-# cyber-kit API (v0.3.5)
+# cyber-kit API (v0.3.6)
 
 All modules are plain ES modules. Import from `'cyber-kit'` (everything) or deep paths like `'cyber-kit/core/theme.js'` (same module instances).
 
@@ -117,7 +117,7 @@ CSS building blocks: `.hud-panel .stat .label .value .level-progress .lp-* .icon
 Web build never loads ads; `?adsim=1` shows a simulated overlay. `TEST_UNITS` = Google's public test ids.
 Policy: never show interstitials at launch, exit or level start; rewarded ads must be opt-in.
 
-## ui/hud.css — home menu layout (v0.3.5)
+## ui/hud.css — home menu layout (v0.3.6)
 Shared start-screen zones for every arcade game. Add class `menu-home` on `#screen-start` (keep `hero` for the desktop left wash):
 
 | Zone | Role |
