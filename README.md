@@ -9,7 +9,7 @@
 ## 用法 Usage
 每隻遊戲將某個 **tag 版本** 複製入 `vendor/cyber-kit/`（唔用 CDN，方便離線同包 App）：
 ```bash
-git clone --depth 1 --branch v0.3.4 https://github.com/fung2222/cyber-kit /tmp/ck
+git clone --depth 1 --branch v0.3.5 https://github.com/fung2222/cyber-kit /tmp/ck
 mkdir -p vendor/cyber-kit && (cd /tmp/ck && tar cf - --exclude=.git --exclude=examples --exclude=docs --exclude=tests --exclude=README.md --exclude=.gitignore .) | (cd vendor/cyber-kit && tar xf -)
 ```
 ```html
@@ -50,6 +50,7 @@ stage.loop((dt, t) => { theme.update(dt); city.update(t, dt, stage.camera); stag
 完整 API：[docs/API.md](docs/API.md)
 
 ## 版本 Versions
+- **v0.3.5** (2026-10-15) — 修復主選單 Start 無法點擊（`.menu-body`/`.menu-mid` pointer-events）。
 - **v0.3.4** (2026-10-15) — 主選單美化：Arcade Menu 左上、品牌正中、底部置中。
 - **v0.3.3** (2026-10-15) — 統一主選單佈局（`.menu-home` zones：top / brand / cta / meta）。
 - **v0.3.2** (2026-10-03) — 統一音量（所有遊戲 BGM ≈ −20 LUFS）、限幅器、音量曲線；光暈 LOW/HIGH（預設 LOW，畫面更清晰）。
@@ -58,6 +59,9 @@ stage.loop((dt, t) => { theme.update(dt); city.update(t, dt, stage.camera); stag
 
 ## 授權 License
 Kit code: MIT © fung2222. Three.js: MIT (`three/LICENSE`). Orbitron font: SIL OFL 1.1 (`fonts/OFL.txt`).
+
+## v0.3.5
+- **Start button click fix**: `.menu-body` / `.menu-mid` use `pointer-events: auto` so primary Start / mode cards receive taps (absolute stack previously set `none` on ancestors).
 
 ## v0.3.4
 - **Home menu polish** (`ui/hud.css`): Arcade Menu locked top-left; lang top-right; brand + primary CTA centred on the full viewport; start-screen meta (controls / hi-line) centre-aligned at the bottom. Secondary options use `.menu-cta .menu-sec`.
