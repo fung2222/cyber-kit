@@ -1,4 +1,4 @@
-# cyber-kit API (v0.3.3)
+# cyber-kit API (v0.3.4)
 
 All modules are plain ES modules. Import from `'cyber-kit'` (everything) or deep paths like `'cyber-kit/core/theme.js'` (same module instances).
 
@@ -117,15 +117,15 @@ CSS building blocks: `.hud-panel .stat .label .value .level-progress .lp-* .icon
 Web build never loads ads; `?adsim=1` shows a simulated overlay. `TEST_UNITS` = Google's public test ids.
 Policy: never show interstitials at launch, exit or level start; rewarded ads must be opt-in.
 
-## ui/hud.css — home menu layout (v0.3.3)
+## ui/hud.css — home menu layout (v0.3.4)
 Shared start-screen zones for every arcade game. Add class `menu-home` on `#screen-start` (keep `hero` for the desktop left wash):
 
 | Zone | Role |
 |---|---|
-| `.menu-top` / `.menu-top-left` / `.menu-top-right` | Options & secondary: Arcade Menu, lang, privacy, class/stage picks, chips |
-| `.menu-body` | Full-height column that centres the brand + CTA cluster |
-| `.menu-brand` | Logo / kicker / title / tagline with breathing room (`margin-bottom` clamp) |
-| `.menu-cta` | Primary Start / mode cards — visual centre of the screen |
-| `.menu-meta` | Controls hints + hi-line (stats); not crowded against the logo |
+| `.menu-top` / `.menu-top-left` / `.menu-top-right` | Top-left: Arcade Menu only. Top-right: lang (+ privacy/chips). Secondary play options live in `.menu-cta .menu-sec` |
+| `.menu-body` | Full-viewport flex column; centres brand + CTA |
+| `.menu-brand` | Logo block — horizontally & vertically centred with the CTA |
+| `.menu-cta` | Primary Start / mode cards (centred). Optional `.menu-sec` for secondary ghosts |
+| `.menu-meta` | Absolute bottom; controls / hi-line centre-aligned |
 
 `.menu-privacy` and `.menu-chip` style top-bar privacy link and tier/stat chips. Portrait (`max-width: 760px`) centres brand/CTA; desktop hero stays left-aligned inside `.menu-body`.
