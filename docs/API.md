@@ -1,6 +1,10 @@
-# cyber-kit API (v0.3.7)
+# cyber-kit API (v0.3.8)
 
 All modules are plain ES modules. Import from `'cyber-kit'` (everything) or deep paths like `'cyber-kit/core/theme.js'` (same module instances).
+
+## ui/ui.js — How-to (v0.3.8)
+`ui.howto({ title, kicker, sections:[{heading, body}], closeLabel, closeSmall })` — scrollable bilingual rules/controls modal (body = safe HTML). Resolves when closed; shares `modalOpen` / `closeModal` with confirm.
+`ui.mountHowto({ getContent, id?, onOpen? })` — inserts `#btn-howto.menu-howto` into `.menu-top-right` (before privacy/lang), preserving Arcade Menu top-left. `getContent()` must return already-translated `{title, sections}`.
 
 ## core/flags.js
 `parseFlags(search?)` → object; `flags` = parsed `location.search`.
