@@ -9,7 +9,7 @@
 ## 用法 Usage
 每隻遊戲將某個 **tag 版本** 複製入 `vendor/cyber-kit/`（唔用 CDN，方便離線同包 App）：
 ```bash
-git clone --depth 1 --branch v0.3.11 https://github.com/fung2222/cyber-kit /tmp/ck
+git clone --depth 1 --branch v0.3.12 https://github.com/fung2222/cyber-kit /tmp/ck
 mkdir -p vendor/cyber-kit && (cd /tmp/ck && tar cf - --exclude=.git --exclude=examples --exclude=docs --exclude=tests --exclude=README.md --exclude=.gitignore .) | (cd vendor/cyber-kit && tar xf -)
 ```
 ```html
@@ -50,6 +50,7 @@ stage.loop((dt, t) => { theme.update(dt); city.update(t, dt, stage.camera); stag
 完整 API：[docs/API.md](docs/API.md)
 
 ## 版本 Versions
+- **v0.3.12** (2026-10-17) — Harden home icons: inline SVG with explicit neon strokes (no currentColor/font dependency); stronger `.menu-icon-btn` sizing.
 - **v0.3.11** (2026-10-17) — Pin home brand to shared `--menu-brand-top` (~18vh) so logo height matches every game; CTA flows below with fixed gap.
 - **v0.3.10** (2026-10-17) — Home stack: brand mid-high + CTA mid-low with fixed gap (no absolute overlap); cap home title size.
 - **v0.3.9** (2026-10-17) — Home icon bar (house / book / gear); optical brand≈42% + CTA≈58%; howto tabs 玩法｜操控｜私隱; settings sheet (lang / mute / volume / glow).
