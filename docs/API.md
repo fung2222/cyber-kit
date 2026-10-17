@@ -1,10 +1,13 @@
-# cyber-kit API (v0.3.8)
+# cyber-kit API (v0.3.9)
 
 All modules are plain ES modules. Import from `'cyber-kit'` (everything) or deep paths like `'cyber-kit/core/theme.js'` (same module instances).
 
-## ui/ui.js — How-to (v0.3.8)
-`ui.howto({ title, kicker, sections:[{heading, body}], closeLabel, closeSmall })` — scrollable bilingual rules/controls modal (body = safe HTML). Resolves when closed; shares `modalOpen` / `closeModal` with confirm.
-`ui.mountHowto({ getContent, id?, onOpen? })` — inserts `#btn-howto.menu-howto` into `.menu-top-right` (before privacy/lang), preserving Arcade Menu top-left. `getContent()` must return already-translated `{title, sections}`.
+## ui/ui.js — Home icon bar + How-to + Settings (v0.3.9)
+`ui.styleHubHome()` — restyles `#btn-arcade-menu` into a house icon (keeps hub gate / existing click handler).
+`ui.howto({ title, kicker, sections|rules|controls, privacyUrl, privacyHtml, tab })` — sheet with tabs **玩法｜操控｜私隱** (body = safe HTML). Privacy defaults to `kit.privacyBlurb` + link.
+`ui.mountHowto({ getContent, privacyUrl?, onOpen? })` — book icon in `.menu-top-right`; hides text privacy/lang clutter on the start bar.
+`ui.settings({ audio, stage, extras, getGlow, setGlow })` — settings sheet: language EN/中, mute, master volume slider, glow LOW/HIGH, optional `extras`.
+`ui.mountSettings({ audio, stage, extras?, open?, onOpen? })` — gear icon; if `open` is set, calls that instead of the kit sheet (e.g. cyber-board’s own settings screen).
 
 ## core/flags.js
 `parseFlags(search?)` → object; `flags` = parsed `location.search`.
@@ -121,15 +124,15 @@ CSS building blocks: `.hud-panel .stat .label .value .level-progress .lp-* .icon
 Web build never loads ads; `?adsim=1` shows a simulated overlay. `TEST_UNITS` = Google's public test ids.
 Policy: never show interstitials at launch, exit or level start; rewarded ads must be opt-in.
 
-## ui/hud.css — home menu layout (v0.3.7)
-Shared start-screen zones for every arcade game. Add class `menu-home` on `#screen-start` (keep `hero` for the desktop left wash):
+## ui/hud.css — home menu layout (v0.3.9)
+Shared start-screen zones for every arcade game. Add class `menu-home` on `#screen-start` (keep `hero` for the desktop left wash). `mountHowto` / `mountSettings` add `.ck-iconbar`.
 
 | Zone | Role |
 |---|---|
-| `.menu-top` / `.menu-top-left` / `.menu-top-right` | Top-left: Arcade Menu only. Top-right: lang (+ privacy/chips). Secondary play options live in `.menu-cta .menu-sec` |
-| `.menu-body` | Full-viewport flex column; centres brand + CTA |
-| `.menu-brand` | Logo block — horizontally & vertically centred with the CTA |
-| `.menu-cta` | Primary Start / mode cards (centred). Optional `.menu-sec` for secondary ghosts |
+| `.menu-top-left` | House icon → Arcade hub (`#btn-arcade-menu`, gated by `shouldShowArcadeMenu`) |
+| `.menu-top-right` | Book (howto) + gear (settings); chips OK; text privacy/lang hidden under `.ck-iconbar` |
+| `.menu-brand` | Logo + title + subtitle — optical centre **~42%** from top |
+| `.menu-cta` | Primary Start / mode cards — optical centre **~58%** from top |
 | `.menu-meta` | Absolute bottom; controls / hi-line centre-aligned |
 
-`.menu-privacy` and `.menu-chip` style top-bar privacy link and tier/stat chips. Portrait (`max-width: 760px`) centres brand/CTA; desktop hero stays left-aligned inside `.menu-body`.
+Dense grids (`.game-grid` / `.mode-list`) lift brand via `:has()`. Icon buttons use `.menu-icon-btn`.
