@@ -1,4 +1,4 @@
-# cyber-kit API (v0.3.10)
+# cyber-kit API (v0.3.11)
 
 All modules are plain ES modules. Import from `'cyber-kit'` (everything) or deep paths like `'cyber-kit/core/theme.js'` (same module instances).
 
