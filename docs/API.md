@@ -1,4 +1,4 @@
-# cyber-kit API (v0.3.9)
+# cyber-kit API (v0.3.10)
 
 All modules are plain ES modules. Import from `'cyber-kit'` (everything) or deep paths like `'cyber-kit/core/theme.js'` (same module instances).
 
@@ -131,8 +131,8 @@ Shared start-screen zones for every arcade game. Add class `menu-home` on `#scre
 |---|---|
 | `.menu-top-left` | House icon → Arcade hub (`#btn-arcade-menu`, gated by `shouldShowArcadeMenu`) |
 | `.menu-top-right` | Book (howto) + gear (settings); chips OK; text privacy/lang hidden under `.ck-iconbar` |
-| `.menu-brand` | Logo + title + subtitle — optical centre **~42%** from top |
-| `.menu-cta` | Primary Start / mode cards — optical centre **~58%** from top |
+| `.menu-brand` | Logo + title + subtitle — mid-high in `.menu-mid` flex stack |
+| `.menu-cta` | Primary Start / mode cards — mid-low under brand; fixed `--menu-stack-gap` (never overlaps) |
 | `.menu-meta` | Absolute bottom; controls / hi-line centre-aligned |
 
-Dense grids (`.game-grid` / `.mode-list`) lift brand via `:has()`. Icon buttons use `.menu-icon-btn`.
+Dense grids keep the same stack; slightly tighter gap. Icon buttons use `.menu-icon-btn`. Home title size capped so CJK logos never cover Start.
