@@ -9,7 +9,7 @@
 ## 用法 Usage
 每隻遊戲將某個 **tag 版本** 複製入 `vendor/cyber-kit/`（唔用 CDN，方便離線同包 App）：
 ```bash
-git clone --depth 1 --branch v0.3.13 https://github.com/fung2222/cyber-kit /tmp/ck
+git clone --depth 1 --branch v0.3.14 https://github.com/fung2222/cyber-kit /tmp/ck
 mkdir -p vendor/cyber-kit && (cd /tmp/ck && tar cf - --exclude=.git --exclude=examples --exclude=docs --exclude=tests --exclude=README.md --exclude=.gitignore .) | (cd vendor/cyber-kit && tar xf -)
 ```
 ```html
