@@ -103,6 +103,14 @@ Keep gameplay materials below the LOW threshold (HDR colour ≲ 1) so they rende
 `createInput({ dir(d, info), tap(p), holdStart(p), holdEnd(p), action(name), anyGesture() }, { target, swipe: 'once'|'chain', threshold = 24, holdMs = 380, tapMaxMove = 14, keys, actions, ignore })` → `{ setEnabled(b), dispose() }`.
 Default actions: Enter/Space `primary`, P/Esc `pause`, M `mute`, Z/U/Backspace `undo`, R `restart`, C `camera`, F `fps`. Pointer events on buttons/links/`[data-no-input]` are ignored.
 
+## input/view.js — limited in-play zoom / orbit (v0.3.16)
+Board-style camera offsets used after a match starts (not on home menus).
+- `VIEW_LIMITS` — `{ zoomMin, zoomMax, azMax, pitchMin, pitchMax }`
+- `defaultView()` → `{ zoom, az, el, px, pz }`; `clampView(v, basePitch, ext)`; `dampView(cur, tgt, dt)`; `isDefaultView(v)`
+- `new ViewInput(el, handlers, { oneFingerOrbit? })` — pinch zoom, twist, two-finger pan, wheel zoom; one-finger / left-drag orbits when `oneFingerOrbit` is true (default). Set `oneFingerOrbit: false` for swipe/tap games so gameplay keeps the first finger; right-drag / ctrl-drag / pinch / wheel still move the camera.
+Handlers: `enabled()`, `tap(x,y,e)`, `zoom(factor,x,y)`, `twist(dRad,x,y)`, `pan(x0,y0,x1,y1)`, `orbit(dAz,dEl)`, `gesture(active)`, `down(e)`.
+
+
 ## ui/ui.js + ui/hud.css
 `new CyberUI({ screens: ['start','pause','over'] })` (elements `#screen-<name>`) → `.show(name|null)`, `.hud(on)`, `.loaded()`, `.fatal(msg)`, `.on(id, fn)`, `.setText(id, v)`, `.bump(el)`, `.setMuted(b)`, `.popup(x, y, text, sub, cls)`, `.glowToggle(stage, { after = 'btn-resume', id = 'btn-glow', onChange })` (v0.3.0: inserts a `GLOW: LOW/HIGH` ghost button, strings `kit.glow*`), `.banner(main, sub, note)` + `.tick(dt)`, `.flash(color, ms)`, `.toast(text, ms)`, `.confirm({ kicker, title, text, ok, okSmall, cancel, cancelSmall }) → Promise<bool>`, `.modalOpen`, `.closeModal()`.
 CSS building blocks: `.hud-panel .stat .label .value .level-progress .lp-* .icon-btn .neon-btn(.ghost) .screen(.hero) .panel(.small) .title .title2 .glitch .results .ck-toast .ck-modal`.
