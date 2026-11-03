@@ -115,6 +115,9 @@ Handlers: `enabled()`, `tap(x,y,e)`, `zoom(factor,x,y)`, `twist(dRad,x,y)`, `pan
 `new CyberUI({ screens: ['start','pause','over'] })` (elements `#screen-<name>`) → `.show(name|null)`, `.hud(on)`, `.loaded()`, `.fatal(msg)`, `.on(id, fn)`, `.setText(id, v)`, `.bump(el)`, `.setMuted(b)`, `.popup(x, y, text, sub, cls)`, `.glowToggle(stage, { after = 'btn-resume', id = 'btn-glow', onChange })` (v0.3.0: inserts a `GLOW: LOW/HIGH` ghost button, strings `kit.glow*`), `.banner(main, sub, note)` + `.tick(dt)`, `.flash(color, ms)`, `.toast(text, ms)`, `.confirm({ kicker, title, text, ok, okSmall, cancel, cancelSmall }) → Promise<bool>`, `.modalOpen`, `.closeModal()`.
 CSS building blocks: `.hud-panel .stat .label .value .level-progress .lp-* .icon-btn .neon-btn(.ghost) .screen(.hero) .panel(.small) .title .title2 .glitch .results .ck-toast .ck-modal`.
 
+## ui/game-loading.js
+`showGameLoading({ label = 'Loading...', hold = 900, fade = 320 }) → Promise` — full-screen start/launch transition: two rotating neon rings, centred label, radial glow. Self-contained (injects its own CSS/DOM); resolves after fade-out. `bindStartLoading(selectors?)` adds more start controls; importing `cyber-kit` auto-binds `#btn-start`, `#btn-play`, `#btn-stage-go`, `#btn-vsai`, `#btn-local`, `#btn-fight`, `.mode-card`, `.stage-card`, `[data-map]`. Hub uses it directly before navigation; games get it without changing their start handlers.
+
 ## ui/strings.js
 `STR` zh-HK/EN pairs (`[zh, en]`), `t2(key)` → "zh EN".
 
